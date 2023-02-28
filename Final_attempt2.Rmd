@@ -1,0 +1,147 @@
+---
+title: "Language Proficiency"
+output:flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: readable
+---
+
+```{r, include=TRUE, eval=TRUE}
+
+library(flexdashboard)
+library(knitr)
+library(rio)
+library(tidyverse)
+library(car)
+library(extrafont)
+library(colorblindr)
+library(cowplot)
+library(scales)
+library(zoo)
+library(here)
+library(haven)
+library(ggrepel)
+library(gganimate)
+library(hrbrthemes)
+library(gridExtra)
+
+knitr::opts_chunk$set(fig.width=12, fig.height=9, fig.align = "center", message = FALSE, error = FALSE, warning = FALSE)
+theme_set <- function(new) {
+  old <- ggplot_global$theme_current
+  ggplot_global$theme_current <- new
+  invisible(old)
+Theme_set(theme_minimal(base_size = 20))
+options(scipen=999)
+}
+
+stex <- read.csv("stex.csv")
+
+
+  #stex <- stex[sample(1:nrow(stex),5000),]
+#Earlier I was working on another data but there was nothing much I could get from that, so I had to change it. 
+
+#This data is from Kagel of a Dutch langauge proficiency test. The data represents people age, sex, country of origin, 1st language, 2nd langauge, age of acquisition and length of residence in netherlands. 
+
+#This is not my best attempt I am still figuring out my final plots. 
+
+```
+
+# Vis 1
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Plot 1 Attempt 1
+
+```{r vis 1, eval=TRUE}
+
+plot1 <- ggplot(data=stex, aes(x=Family, 
+                               y=Speaking, 
+                               color= as.factor(C),
+                               linetype=as.factor(Enroll),
+                               label=as.factor(C))) +
+  geom_point(size=4) +
+  geom_line(aes(linetype=as.factor(C), 
+                color=as.factor(AaA)),
+            linewidth=2) +
+  theme_bw() +
+  labs(x = "Family Status", 
+       y = "Speaking score in Dutch language",
+       color="Country of Origin", 
+       linetype="Days of learning", 
+       title="Language proficiencies") +
+  #geom_label_repel(data = filter(stex, C==UnitedStates), 
+                   #aes(label = C),
+                   #nudge_x = -.6,
+                   #segment.size  = 0.3,
+                   #segment.color = "grey50",
+                   #direction     = "x",
+                   #na.rm = TRUE) +
+  theme_minimal() +
+  theme(legend.position="none",
+        axis.title=element_text(size=14,face="bold"),
+        axis.text=element_text(size=10),
+        title=element_text(size=16))
+plot1
+
+```
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Plot 2 attempt 1
+
+```{r vis 2, eval=TRUE}
+
+plot2 <- ggplot(data=stex, aes(x=C, y=L1, color= as.factor(Sex), linetype=as.factor(Sex))) +
+  geom_point() +
+  geom_line(aes(linetype=as.factor(Sex), color=as.factor(Sex))) +
+  theme_bw() +
+  labs(x = "Country of Origin", y = "1st language",
+       color="Sex", linetype="Sex") +
+  scale_color_manual(name= "Sex", labels = c("Male", "Female"), values = c("black", "yellow")) +
+  scale_linetype_manual(name="Sex", labels = c("Male", "Female"), values=c(4, 1)) +
+  theme(axis.text.x = element_text(size = 60))+
+  theme_minimal()
+plot2
+
+```
+
+#I am trying to visualize the mean scores of speaking, Mor, and lexicon with respect to AoA (Age of acquisition) and enrollment hours. 
+
+#Still working on it. 
+
+Column {data-width=400}
+-----------------------------------------------------------------------
+
+### Plot 1 attempt 2
+
+```{r vis 2, eval=TRUE}
+
+require(psych)
+desc <- describeBy(stex$Speaking,
+                   group=list(stex$Sex,stex$C),mat=TRUE)
+desc1 <- describeBy(stex$lex,
+                   group=list(stex$Sex,stex$C), mat=TRUE)
+desc1 <- stex %>%
+  group_by(C, Sex) %>%
+  summarize(Speaking = mean(Speaking,na.rm = T),
+            morph = mean(morph),
+            lex = mean(lex),
+            L1 = frequency(L1))
+desc1 <- desc1 %>% drop_na()
+
+
+plot3 <- ggplot(data=stex, aes(x=Speaking, y=C, color= as.factor(Sex), linetype=as.factor(Sex))) +
+  geom_point() +
+  geom_line(aes(linetype=as.factor(Sex), color=as.factor(Sex))) +
+  theme_bw() +
+  labs(x = "Country of Origin", y = "1st language",
+       color="Sex", linetype="Sex") +
+  scale_color_manual(name= "Sex", labels = c("Male", "Female"), values = c("black", "yellow")) +
+  scale_linetype_manual(name="Sex", labels = c("Male", "Female"), values=c(4, 1)) +
+  theme(axis.text.x = element_text(size = 60))+
+  theme_minimal()
+plot3
+
+```
